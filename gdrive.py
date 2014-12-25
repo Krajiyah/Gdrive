@@ -1,3 +1,6 @@
+import colorama, hashlib, os, datetime
+from colorama import Fore, Back, Style
+
 class DirectoryTree:
 
 	def __init__(self, name, file_type, file_size, modified, inp_path, inp_branches=[]):
@@ -10,8 +13,6 @@ class DirectoryTree:
 		self.path = inp_path
 
 	def displayTree(self, tab):
-		import colorama
-		from colorama import Fore, Back, Style
 
 		colorama.init()
 
@@ -41,12 +42,13 @@ class DirectoryTree:
 			DirectoryTree.setIndeces(branch, rootentry, self.index, i)
 			i += 1
 
+#local directory tree
 class LTree(DirectoryTree):
 		
 	@property       
 	def md5(self):
 		if self.md5_val == None and self.type_file == "file":
-			import hashlib
+			
 			p = self.path
 			p = p.split("/")
 			for i in range(len(p)):
@@ -60,6 +62,7 @@ class LTree(DirectoryTree):
 		else:
 			return self.md5_val
 
+#google drive tree
 class GTree(DirectoryTree):
 
 	@property       
@@ -78,6 +81,8 @@ class GTree(DirectoryTree):
 		for branch in self.branches:
 			GTree.writeInfo(branch)
 
+#URL to gdrive command (GitHub Repository): https://github.com/prasmussen/gdrive
+#I made an alias to gdrive as drive
 def list_command():
 	return "drive list"
 def info_command(idtag):
@@ -110,7 +115,6 @@ def create_remote_folder(name, parentID):
 
 #special bash function for dictionaries
 def bash_dict(command):
-	import os
 	result = os.popen(command).readlines()
 	i = 0
 	while i < len(result):
@@ -126,8 +130,8 @@ def bash_dict(command):
 		i += 1
 	return result
 
+#bash function for all other commands
 def bash(command):
-	import os
 	result = os.popen(command).readlines()
 	i = 0
 	while i < len(result):
@@ -136,7 +140,7 @@ def bash(command):
 	return result 
 
 def buildGTree(rootid, prevpath):
-	import datetime
+	
 	dt = None
 
 	if(rootid in info):
@@ -190,9 +194,6 @@ def buildLTree(name):
 			n[k] = n[k][1:len(n[k])-1]
 		k += 1
 	n = '/'.join(n)
-
-	import os
-	import datetime
 	
 	dt = os.path.getmtime(n)
 	dt = datetime.datetime.fromtimestamp(dt)
@@ -210,12 +211,10 @@ def buildLTree(name):
 		size = os.path.getsize(nam)
 		units = ["B", "KB", "MB", "GB"]
 		curr_unit = 0
-		needround = False
 		while(size >= 1000):
 			curr_unit += 1
 			size = size / 1000
-			needround = True
-		if(needround):
+		if "." in str(size):
 			r = int(str(size).split(".")[1][0])
 			if(r >= 5):
 				size = int(size + 1)
@@ -254,6 +253,7 @@ def construct():
 		md5 = info_key[6]
 		md5 = md5.replace("Md5sum: ", "")
 		info[vals[0]] = [vals[1], vals[2], dt, parentID, md5]
+		#Key: Value for INFO dictionary
 		#ID: [Title, Size, DateMod, ParentID, md5]
 
 	i = 0;
@@ -282,6 +282,35 @@ def construct():
 	local_tree.displayTree(">")
 	print("")
 
-def syncLocalToRemote(local, remote):
+def sync(local, remote):
+	"""
+	(I have set folder checksums to be lists containing checksums of its children,
+	only files have md5 checksum strings instead of lists)
+
+	Go through whole local tree and compare each node to all remote nodes 
+	according to these rules:
+
+		if the local file and a remote file have same md5 sum
+		and one of those files is closer to today's date,
+			if the one file is local,
+				then delete remote file and upload local file.
+			else
+				then delete local file and download remote file.
+		
+		if the local folder and a remote folder have same checksum
+		and one of those folders is closer to today's date,
+			if the one folder is local,
+				then ....
+			else
+				then ....
+
+		else the local file/folder does not match any remote file/folder checksum,
+			then ....
+
+	Go through whole remote tree and compare each node to all local nodes 
+	according to these rules:
+
+		if the remote file/folder does not match any local file/folder checksum,
+			then ....
+	"""
 	pass
-	#todo
